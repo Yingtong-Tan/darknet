@@ -25,6 +25,11 @@ static int coco_ids[] = { 1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,
 
 void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, int ngpus, int clear, int dont_show, int calc_map, int mjpeg_port, int show_imgs, int benchmark_layers, char* chart_path)
 {
+    // tyt, log data
+    FILE* train_log_file;
+    train_log_file = fopen("train_log.csv", "w");
+    fprintf(train_log_file, "iteration,loss,avg_loss,current_rate,time_of_this_iteration,load_time_of_this_iteration,processed_img_by_now,avg_time,time_remaining\n");
+
     list *options = read_data_cfg(datacfg);
     char *train_images = option_find_str(options, "train", "data/train.txt");
     char *valid_images = option_find_str(options, "valid", train_images);
@@ -315,6 +320,10 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
         }
         printf("\n %d: %f, %f avg loss, %f rate, %lf seconds, %d images, %f hours left\n", iteration, loss, avg_loss, get_current_rate(net), (what_time_is_it_now() - time), iteration*imgs, avg_time);
         fflush(stdout);
+
+        // tyt, log data
+        fprintf(train_log_file, "%d,%f,%f,%f,%lf,%lf,%d,%f,%lf\n", iteration, loss, avg_loss, get_current_rate(net), (what_time_is_it_now() - time), load_time, iteration* imgs, avg_time, time_remaining);
+        fflush(train_log_file);
 
         int draw_precision = 0;
         if (calc_map && (iteration >= next_map_calc || iteration == net.max_batches)) {
